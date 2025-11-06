@@ -1,14 +1,18 @@
-# =============================
+########################################
 # Generate Secure Random Password
-# =============================
+########################################
 resource "random_password" "rds_password" {
-  length  = 16
-  special = true
+  length           = 16
+  special          = true
+  upper            = true
+  lower            = true
+  number           = true
+  override_special = "!@#%^*()-_=+"
 }
 
-# =============================
+########################################
 # Create Secret in AWS Secrets Manager
-# =============================
+########################################
 locals {
   secret_name_final = var.secret_name != "" ? var.secret_name : "rds/${var.db_identifier}/credentials"
 }
@@ -28,9 +32,9 @@ resource "aws_secretsmanager_secret_version" "rds_secret_version" {
   })
 }
 
-# =============================
+########################################
 # Parameter Group
-# =============================
+########################################
 resource "aws_db_parameter_group" "this" {
   name        = "${var.db_identifier}-param-group"
   family      = var.parameter_group_family
@@ -47,9 +51,9 @@ resource "aws_db_parameter_group" "this" {
   tags = merge(var.tags, { Name = "${var.db_identifier}-param-group" })
 }
 
-# =============================
+########################################
 # Option Group
-# =============================
+########################################
 resource "aws_db_option_group" "this" {
   name                     = "${var.db_identifier}-option-group"
   engine_name              = var.engine
@@ -74,26 +78,25 @@ resource "aws_db_option_group" "this" {
   tags = merge(var.tags, { Name = "${var.db_identifier}-option-group" })
 }
 
-# =============================
+########################################
 # Subnet Group
-# =============================
+########################################
 resource "aws_db_subnet_group" "this" {
   name       = "${var.db_identifier}-subnet-group"
   subnet_ids = length(var.subnet_ids) > 0 ? var.subnet_ids : data.aws_subnets.default.ids
   tags       = merge(var.tags, { Name = "${var.db_identifier}-subnet-group" })
 }
 
-# =============================
-# RDS Instance
-# =============================
-data "aws_secretsmanager_secret_version" "rds_secret_data" {
-  secret_id = aws_secretsmanager_secret.rds_secret.id
-}
-
+########################################
+# Decode the Secret for RDS credentials
+########################################
 locals {
-  creds = jsondecode(data.aws_secretsmanager_secret_version.rds_secret_data.secret_string)
+  creds = jsondecode(aws_secretsmanager_secret_version.rds_secret_version.secret_string)
 }
 
+########################################
+# RDS Instance
+########################################
 resource "aws_db_instance" "this" {
   identifier                 = var.db_identifier
   engine                     = var.engine
