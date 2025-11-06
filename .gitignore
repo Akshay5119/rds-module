@@ -1,0 +1,15 @@
+# Terraform local files
+.terraform/
+.terraform.lock.hcl
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Crash logs, override files
+crash.log
+
+# Editor directories and files
+.vscode/
+*.swp
+*.swo
