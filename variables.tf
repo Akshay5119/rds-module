@@ -30,7 +30,7 @@ variable "engine" {
 variable "engine_version" {
   description = "Full engine version"
   type        = string
-  default     = "8.0.36"
+  default     = "8.0.44"
 }
 
 variable "engine_version_major" {
