@@ -7,7 +7,7 @@ resource "random_password" "rds_password" {
   upper            = true
   lower            = true
   number           = true
-  override_special = "!@#%^*()-_=+"
+  override_special = "!#$%^*()-_=+"
 }
 
 ########################################
