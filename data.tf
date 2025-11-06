@@ -3,7 +3,7 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# Fetch all subnets in default VPC
+# Fetch default subnets
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -11,7 +11,7 @@ data "aws_subnets" "default" {
   }
 }
 
-# Fetch default security group from default VPC
+# Fetch default security group
 data "aws_security_group" "default" {
   filter {
     name   = "group-name"

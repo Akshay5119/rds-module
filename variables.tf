@@ -3,73 +3,80 @@ variable "db_identifier" {
   type        = string
 }
 
+variable "db_username" {
+  description = "Master username for the RDS instance"
+  type        = string
+  default     = "admin"
+}
+
+variable "secret_name" {
+  description = "AWS Secrets Manager secret name. Auto-generated if left blank."
+  type        = string
+  default     = ""
+}
+
+variable "kms_key_id" {
+  description = "Optional KMS key ID for encrypting the secret"
+  type        = string
+  default     = null
+}
+
 variable "engine" {
-  description = "Database engine (mysql, postgres, etc.)"
+  description = "Database engine"
   type        = string
   default     = "mysql"
 }
 
 variable "engine_version" {
-  description = "Engine version (full)"
+  description = "Full engine version"
   type        = string
   default     = "8.0.36"
 }
 
 variable "engine_version_major" {
-  description = "Major engine version (used by option group)"
+  description = "Major engine version"
   type        = string
   default     = "8.0"
 }
 
 variable "instance_class" {
-  description = "Instance type for RDS"
+  description = "RDS instance type"
   type        = string
   default     = "db.t3.micro"
 }
 
 variable "allocated_storage" {
-  description = "Initial storage (in GB)"
+  description = "Initial allocated storage (GB)"
   type        = number
   default     = 20
 }
 
 variable "max_allocated_storage" {
-  description = "Maximum storage auto-scaling limit (in GB)"
+  description = "Max auto-storage limit (GB)"
   type        = number
   default     = 100
 }
 
 variable "db_name" {
-  description = "Database name"
+  description = "Initial database name"
   type        = string
   default     = "appdb"
 }
 
-variable "username" {
-  description = "Master username"
-  type        = string
-}
-
-variable "password" {
-  description = "Master password"
-  type        = string
-  sensitive   = true
-}
-
 variable "subnet_ids" {
-  description = "List of subnet IDs for the DB subnet group. Defaults to default VPC subnets."
+  description = "Custom subnet IDs (optional)"
   type        = list(string)
   default     = []
 }
 
 variable "security_group_ids" {
-  description = "List of VPC security group IDs. Defaults to default VPC SG."
+  description = "Custom security group IDs (optional)"
   type        = list(string)
   default     = []
 }
 
 variable "storage_encrypted" {
-  description = "Enable storage encryption"
+  description = "Encrypt RDS storage"
   type        = bool
   default     = true
 }
@@ -81,25 +88,25 @@ variable "multi_az" {
 }
 
 variable "backup_retention_period" {
-  description = "Number of days to retain backups"
+  description = "Backup retention days"
   type        = number
   default     = 7
 }
 
 variable "skip_final_snapshot" {
-  description = "Skip snapshot when deleting DB"
+  description = "Skip snapshot on deletion"
   type        = bool
   default     = true
 }
 
 variable "deletion_protection" {
-  description = "Protect RDS instance from accidental deletion"
+  description = "Protect from deletion"
   type        = bool
   default     = false
 }
 
 variable "publicly_accessible" {
-  description = "Should the database be publicly accessible?"
+  description = "Should DB be public?"
   type        = bool
   default     = false
 }
@@ -111,23 +118,23 @@ variable "apply_immediately" {
 }
 
 variable "tags" {
-  description = "Tags to apply to RDS resources"
+  description = "Common tags"
   type        = map(string)
   default     = {}
 }
 
 # ====================================
-# Parameter Group Configuration
+# Parameter Group
 # ====================================
 
 variable "parameter_group_family" {
-  description = "DB parameter group family (e.g., mysql8.0, postgres15)"
+  description = "DB parameter group family"
   type        = string
   default     = "mysql8.0"
 }
 
 variable "parameters" {
-  description = "Custom DB parameters (name/value pairs)"
+  description = "Custom DB parameters"
   type = list(object({
     name  = string
     value = string
@@ -139,11 +146,11 @@ variable "parameters" {
 }
 
 # ====================================
-# Option Group Configuration
+# Option Group
 # ====================================
 
 variable "option_group_options" {
-  description = "List of options for the RDS option group"
+  description = "Option group settings"
   type = list(object({
     option_name = string
     option_settings = optional(list(object({

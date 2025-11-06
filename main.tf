@@ -1,10 +1,31 @@
 # =============================
-# Subnet Group
+# Generate Secure Random Password
 # =============================
-resource "aws_db_subnet_group" "this" {
-  name       = "${var.db_identifier}-subnet-group"
-  subnet_ids = length(var.subnet_ids) > 0 ? var.subnet_ids : data.aws_subnets.default.ids
-  tags       = merge(var.tags, { Name = "${var.db_identifier}-subnet-group" })
+resource "random_password" "rds_password" {
+  length  = 16
+  special = true
+}
+
+# =============================
+# Create Secret in AWS Secrets Manager
+# =============================
+locals {
+  secret_name_final = var.secret_name != "" ? var.secret_name : "rds/${var.db_identifier}/credentials"
+}
+
+resource "aws_secretsmanager_secret" "rds_secret" {
+  name        = local.secret_name_final
+  description = "RDS credentials for ${var.db_identifier}"
+  kms_key_id  = var.kms_key_id
+  tags        = merge(var.tags, { Name = "${var.db_identifier}-secret" })
+}
+
+resource "aws_secretsmanager_secret_version" "rds_secret_version" {
+  secret_id = aws_secretsmanager_secret.rds_secret.id
+  secret_string = jsonencode({
+    username = var.db_username
+    password = random_password.rds_password.result
+  })
 }
 
 # =============================
@@ -54,8 +75,25 @@ resource "aws_db_option_group" "this" {
 }
 
 # =============================
+# Subnet Group
+# =============================
+resource "aws_db_subnet_group" "this" {
+  name       = "${var.db_identifier}-subnet-group"
+  subnet_ids = length(var.subnet_ids) > 0 ? var.subnet_ids : data.aws_subnets.default.ids
+  tags       = merge(var.tags, { Name = "${var.db_identifier}-subnet-group" })
+}
+
+# =============================
 # RDS Instance
 # =============================
+data "aws_secretsmanager_secret_version" "rds_secret_data" {
+  secret_id = aws_secretsmanager_secret.rds_secret.id
+}
+
+locals {
+  creds = jsondecode(data.aws_secretsmanager_secret_version.rds_secret_data.secret_string)
+}
+
 resource "aws_db_instance" "this" {
   identifier                 = var.db_identifier
   engine                     = var.engine
@@ -64,8 +102,8 @@ resource "aws_db_instance" "this" {
   allocated_storage          = var.allocated_storage
   max_allocated_storage      = var.max_allocated_storage
   db_name                    = var.db_name
-  username                   = var.username
-  password                   = var.password
+  username                   = local.creds.username
+  password                   = local.creds.password
   db_subnet_group_name       = aws_db_subnet_group.this.name
   parameter_group_name       = aws_db_parameter_group.this.name
   option_group_name          = aws_db_option_group.this.name
